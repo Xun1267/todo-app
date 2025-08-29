@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>雾面玻璃风格 TodoList</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+  <style>
+body {
+  min-height: 100vh;
+  background: linear-gradient(120deg, #e0eaff 0%, #f7e6ff 50%, #ffe6f0 100%);
+  display: block;
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  overflow-x: hidden;
+}
+#main-flex {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+.glass-container {
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 0 0 rgba(255,255,255,0.25) inset;
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-radius: 28px;
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  padding: 44px 34px 34px 34px;
+  width: 370px;
+  max-width: 95vw;
+  position: relative;
+  overflow: hidden;
+}
+.glass-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 28px;
+  pointer-events: none;
+  border: 1.5px solid rgba(255,255,255,0.55);
+  box-shadow: 0 0 60px 0 rgba(255,255,255,0.18) inset;
+}
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 24px;
+  letter-spacing: 2px;
+}
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: rgba(255,255,255,0.6);
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+input[type="date"] {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0d6e0;
+  background: rgba(255,255,255,0.7);
+  font-size: 15px;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: background 0.3s, box-shadow 0.3s, border 0.3s;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  width: 100%; /* 确保在移动端有足够的宽度 */
+}
+input[type="date"]:hover, input[type="date"]:focus {
+  background: rgba(255,255,255,0.35);
+  border: 1.5px solid #bfcad6;
+  box-shadow: 0 4px 16px 0 rgba(31,38,135,0.10), 0 0 0 2px #e0eaff;
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+}
+.input-row button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(31, 38, 135, 0.37);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.input-row button:hover {
+  background: rgba(31, 38, 135, 0.6);
+}
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+li {
+  background: rgba(255,255,255,0.5);
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: background 0.2s;
+}
+li.completed {
+  opacity: 0.4;
+  background: rgba(200, 200, 200, 0.3);
+}
+.actions button {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: color 0.2s;
+}
+.actions button:hover {
+  color: #e57373;
+}
+.todo-list-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  z-index: 2;
+  min-width: 370px;
+  max-width: 370px;
+  transition: transform 0.6s cubic-bezier(.22,1,.36,1), filter 0.6s cubic-bezier(.22,1,.36,1), opacity 0.6s cubic-bezier(.22,1,.36,1);
+  opacity: 1;
+  filter: none;
+}
+.todo-list-panel.shrink {
+  transform: translate(calc(-50% - 220px), -50%) scale(0.93);
+  opacity: 0.65;
+  filter: blur(2px) brightness(0.97);
+}
+.todo-detail-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  min-width: 370px;
+  max-width: 370px;
+  width: 370px;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: none;
+  transition: opacity 0.6s cubic-bezier(.22,1,.36,1), transform 0.6s cubic-bezier(.22,1,.36,1), box-shadow 0.6s cubic-bezier(.22,1,.36,1);
+}
+.todo-detail-panel.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+  box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18), 0 2px 24px 0 rgba(255,255,255,0.10) inset;
+}
+#detail-title {
+  text-align: center;
+  margin-bottom: 18px;
+}
+#detail-content {
+  display: block;
+  margin: 0 auto 0 auto;
+  width: 95%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  font-size: 16px;
+  background: rgba(255,255,255,0.7);
+  box-sizing: border-box;
+}
+@media (max-width: 1200px) {
+  .main-flex.detail-active {
+    left: calc(50vw - 50% - 185px); /* 居中适配小屏 */
+  }
+}
+@media (max-width: 800px) {
+  .todo-list-panel, .todo-detail-panel {
+    min-width: 75vw;
+    max-width: 75vw;
+    width: 75vw;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .todo-list-panel.shrink {
+    transform: translate(calc(-50% - 30vw), -50%) scale(0.93);
+  }
+} 
+.flatpickr-calendar {
+  background: rgba(255,255,255,0.25) !important;
+  box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18), 0 1.5px 0 0 rgba(255,255,255,0.25) inset !important;
+  backdrop-filter: blur(14px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+  border-radius: 18px !important;
+  border: 1.5px solid rgba(255,255,255,0.32) !important;
+  overflow: hidden;
+}
+.flatpickr-months, .flatpickr-weekdays, .flatpickr-days {
+  background: transparent !important;
+}
+.flatpickr-day, .flatpickr-weekday {
+  background: rgba(255,255,255,0.5) !important;
+  border-radius: 8px !important;
+  transition: background 0.2s, color 0.2s;
+}
+.flatpickr-day:hover, .flatpickr-day:focus {
+  background: rgba(200,200,255,0.35) !important;
+  color: #333 !important;
+  box-shadow: 0 0 0 2px #e0eaff;
+}
+.flatpickr-day.selected {
+  background: rgba(123,140,255,0.25) !important;
+  color: #4a4a7b !important;
+  border: 1.5px solid #7b8cff !important;
+}
+.flatpickr-day.today:not(.selected) {
+  background: rgba(200,210,255,0.18) !important;
+  color: #7b8cff !important;
+  border: 1.5px solid #e0eaff !important;
+} 
+input[type="text"]#date-picker-desktop {
+  text-align: center !important;
+} 
+.flatpickr-months {
+  background: rgba(255,255,255,0.22) !important;
+  backdrop-filter: blur(10px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(120%) !important;
+  border-radius: 14px 14px 0 0 !important;
+  border-bottom: 1px solid rgba(200,200,255,0.18) !important;
+  box-shadow: 0 2px 12px 0 rgba(31,38,135,0.08) !important;
+}
+.flatpickr-current-month {
+  background: transparent !important;
+  border-radius: 10px !important;
+  padding: 2px 8px !important;
+  font-weight: bold;
+  color: #4a4a7b !important;
+}
+.flatpickr-monthDropdown-months, .flatpickr-yearDropdown-years {
+  background: rgba(255,255,255,0.7) !important;
+  border-radius: 10px !important;
+  border: 1px solid #e0eaff !important;
+  box-shadow: 0 4px 24px 0 rgba(31,38,135,0.10) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  transition: all 0.35s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden;
+}
+.flatpickr-monthDropdown-month, .flatpickr-yearDropdown-year {
+  border-radius: 8px !important;
+  transition: background 0.2s, color 0.2s;
+}
+.flatpickr-monthDropdown-month:hover, .flatpickr-yearDropdown-year:hover, .flatpickr-monthDropdown-month.selected, .flatpickr-yearDropdown-year.selected {
+  background: rgba(123,140,255,0.18) !important;
+  color: #4a4a7b !important;
+} 
+.check-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #7b8cff;
+  border-radius: 50%;
+  margin-right: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  position: relative;
+}
+li.completed .check-circle {
+  background: #7b8cff;
+  border-color: #7b8cff;
+}
+.checkmark {
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.todo-text {
+  flex: 1;
+  word-break: break-all;
+}
+li {
+  display: flex;
+  align-items: center;
+} 
+    /* 自定义样式来隐藏上月和下月的日期 */
+    .flatpickr-calendar .prevMonthDay,
+    .flatpickr-calendar .nextMonthDay {
+      visibility: hidden !important;
+      pointer-events: none !important;
+      height: 0 !important;
+      width: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: none !important;
+    }
+    
+    /* 确保日历表格没有额外空白 */
+    .flatpickr-calendar .flatpickr-days .dayContainer {
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
+    }
+    
+    /* 移动端日历优化 */
+    @media (max-width: 768px) {
+      .flatpickr-calendar {
+        font-size: 16px !important;
+        min-width: 280px !important;
+        max-width: 90vw !important;
+        position: fixed !important;
+        z-index: 9999 !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+      }
+      
+      .flatpickr-day {
+        height: 44px !important;
+        line-height: 44px !important;
+        min-width: 44px !important;
+        font-size: 16px !important;
+      }
+      
+      .flatpickr-months .flatpickr-month {
+        height: 50px !important;
+      }
+      
+      .flatpickr-current-month {
+        font-size: 18px !important;
+        padding: 8px !important;
+      }
+      
+      /* 确保触摸区域足够大 */
+      .flatpickr-prev-month, .flatpickr-next-month {
+        width: 44px !important;
+        height: 44px !important;
+        line-height: 44px !important;
+      }
+      #date-picker-mobile {
+        width: 45%; /* 调整宽度 */
+        box-sizing: border-box;
+        padding: 6px 8px; /* 调整内边距 */
+        font-size: 12px; /* 调整字体大小 */
+        border-radius: 8px;
+        margin: 4px auto 10px; /* 调整外边距 */
+        display: block;
+        -webkit-appearance: none; /* 移除默认样式 */
+        background: rgba(255, 255, 255, 0.8);
+        border: 1.5px solid rgba(123, 140, 255, 0.3);
+        color: #4a4a7b;
+        font-weight: 500;
+        box-shadow: 0 2px 12px rgba(31, 38, 135, 0.08);
+        transition: all 0.3s ease;
+      }
+      
+      #date-picker-mobile:focus {
+        border-color: rgba(123, 140, 255, 0.6);
+        box-shadow: 0 4px 18px rgba(31, 38, 135, 0.12);
+        background: rgba(255, 255, 255, 0.9);
+      }
+    }
+    
+    /* 汉堡菜单样式 */
+    .hamburger-menu {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10000;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      padding: 8px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2));
+      border-radius: 12px;
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    .hamburger-menu:hover {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+    
+    .hamburger-menu:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+    
+    .hamburger-menu span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: linear-gradient(90deg, #4a5568, #2d3748);
+      border-radius: 2px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin: 0;
+      padding: 0;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .hamburger-menu.active {
+      gap: 0;
+    }
+    
+    .hamburger-menu.active span:nth-child(1) {
+      transform: rotate(45deg) translate(6px, 6px);
+      background: linear-gradient(90deg, #f8bbd9, #f4a6cd);
+    }
+    
+    .hamburger-menu.active span:nth-child(2) {
+      opacity: 0;
+      transform: scale(0);
+    }
+    
+    .hamburger-menu.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(6px, -6px);
+      background: linear-gradient(90deg, #f8bbd9, #f4a6cd);
+    }
+    
+    /* 侧边栏样式 */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 280px;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+      z-index: 999;
+      transition: left 0.3s ease;
+      box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+      padding-top: 80px;
+    }
+    
+    .sidebar.open {
+      left: 0;
+    }
+    
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .sidebar-header h3 {
+      margin: 0;
+      color: #333;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .close-sidebar {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #666;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+    
+    .close-sidebar:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: #333;
+    }
+    
+    .sidebar-nav {
+      padding: 20px 15px;
+    }
+    
+    .nav-item {
+      display: block;
+      padding: 15px 20px;
+      margin: 8px 0;
+      color: #555;
+      text-decoration: none;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px) saturate(150%);
+      -webkit-backdrop-filter: blur(10px) saturate(150%);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: #333;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(123, 140, 255, 0.2), rgba(123, 140, 255, 0.1));
+      color: #4a4a7b;
+      font-weight: bold;
+      border: 1px solid rgba(123, 140, 255, 0.3);
+      box-shadow: 0 6px 20px rgba(123, 140, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    
+    /* 侧边栏遮罩 */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 998;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar-overlay.show {
+       opacity: 1;
+       visibility: visible;
+       pointer-events: auto;
+     }
+     
+     /* 周期计划页面样式 */
+     .cycle-plan-panel, .cycle-detail-panel {
+       position: absolute;
+       left: 50%;
+       top: 50%;
+       transform: translate(-50%, -50%);
+       min-width: 370px;
+       max-width: 370px;
+       width: 370px;
+     }
+     
+     .cycle-detail-header {
+       display: flex;
+       align-items: center;
+       justify-content: space-between;
+       margin-bottom: 20px;
+       flex-wrap: wrap;
+       gap: 10px;
+     }
+     
+     .back-btn {
+       background: rgba(255, 255, 255, 0.6);
+       border: none;
+       padding: 8px 12px;
+       border-radius: 6px;
+       cursor: pointer;
+       font-size: 14px;
+       color: #666;
+       transition: all 0.2s ease;
+     }
+     
+     .back-btn:hover {
+       background: rgba(255, 255, 255, 0.8);
+       color: #333;
+     }
+     
+     .view-mode-toggle {
+       display: flex;
+       gap: 5px;
+     }
+     
+     .mode-btn {
+       background: rgba(255, 255, 255, 0.5);
+       border: none;
+       padding: 6px 12px;
+       border-radius: 6px;
+       cursor: pointer;
+       font-size: 12px;
+       color: #666;
+       transition: all 0.2s ease;
+     }
+     
+     .mode-btn.active {
+       background: rgba(123, 140, 255, 0.3);
+       color: #4a4a7b;
+       font-weight: bold;
+     }
+     
+     .mode-btn:hover {
+       background: rgba(255, 255, 255, 0.7);
+     }
+     
+     #priority-select {
+       padding: 10px 12px;
+       border-radius: 8px;
+       border: 1px solid #d0d6e0;
+       background: rgba(255, 255, 255, 0.7);
+       font-size: 14px;
+       outline: none;
+       min-width: 120px;
+     }
+     
+     .priority-badge {
+       font-size: 11px;
+       padding: 3px 8px;
+       border-radius: 12px;
+       margin-left: 8px;
+       font-weight: bold;
+     }
+     
+     .priority-badge.urgent-important {
+       background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+       color: white;
+     }
+     
+     .priority-badge.important-not-urgent {
+       background: linear-gradient(135deg, #4ecdc4, #44a08d);
+       color: white;
+     }
+     
+     .priority-badge.urgent-not-important {
+       background: linear-gradient(135deg, #feca57, #ff9ff3);
+       color: white;
+     }
+     
+     .priority-badge.not-urgent-not-important {
+       background: linear-gradient(135deg, #a8e6cf, #dcedc1);
+       color: #666;
+     }
+     
+     /* 四象限网格样式 */
+     .quadrant-grid {
+       display: grid;
+       grid-template-columns: 1fr 1fr;
+       grid-template-rows: 1fr 1fr;
+       gap: 12px;
+       height: 400px;
+     }
+     
+     .quadrant {
+       background: rgba(255, 255, 255, 0.4);
+       border-radius: 12px;
+       padding: 12px;
+       overflow-y: auto;
+       border: 1px solid rgba(255, 255, 255, 0.3);
+     }
+     
+     .quadrant.urgent-important {
+       background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(238, 90, 82, 0.15));
+       border-color: rgba(255, 107, 107, 0.3);
+     }
+     
+     .quadrant.important-not-urgent {
+       background: linear-gradient(135deg, rgba(78, 205, 196, 0.15), rgba(68, 160, 141, 0.15));
+       border-color: rgba(78, 205, 196, 0.3);
+     }
+     
+     .quadrant.urgent-not-important {
+       background: linear-gradient(135deg, rgba(254, 202, 87, 0.15), rgba(255, 159, 243, 0.15));
+       border-color: rgba(254, 202, 87, 0.3);
+     }
+     
+     .quadrant.not-urgent-not-important {
+       background: linear-gradient(135deg, rgba(168, 230, 207, 0.15), rgba(220, 237, 193, 0.15));
+       border-color: rgba(168, 230, 207, 0.3);
+     }
+     
+     .quadrant h3 {
+       margin: 0 0 12px 0;
+       font-size: 14px;
+       text-align: center;
+       color: #555;
+       font-weight: bold;
+     }
+     
+     .quadrant-list {
+       list-style: none;
+       padding: 0;
+       margin: 0;
+     }
+     
+     .quadrant-list li {
+       background: rgba(255, 255, 255, 0.6);
+       margin-bottom: 8px;
+       padding: 8px 12px;
+       border-radius: 6px;
+       display: flex;
+       align-items: center;
+       justify-content: space-between;
+       font-size: 14px;
+       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+     }
+     
+     .quadrant-list li.completed {
+       opacity: 0.5;
+       background: rgba(200, 200, 200, 0.4);
+     }
+     
+     .quadrant-list .check-circle {
+       width: 18px;
+       height: 18px;
+       margin-right: 8px;
+     }
+     
+     .quadrant-list .actions button {
+       font-size: 14px;
+       margin-left: 6px;
+     }
+     
+     /* 响应式设计 */
+       @media (max-width: 800px) {
+            .todo-list-panel, .todo-detail-panel, .cycle-plan-panel, .cycle-detail-panel {
+              min-width: 75vw;
+              max-width: 75vw;
+              width: 75vw;
+              left: 50%;
+              transform: translate(-50%, -50%);
+            }
+         
+         .quadrant-grid {
+           grid-template-columns: 1fr;
+           grid-template-rows: repeat(4, 1fr);
+           height: auto;
+         }
+         
+         .cycle-detail-header {
+           flex-direction: column;
+           align-items: stretch;
+         }
+         
+         .view-mode-toggle {
+           justify-content: center;
+         }
+       }
+  </style>
+</head>
+<body>
+  <!-- 汉堡菜单按钮 -->
+  <div class="hamburger-menu" id="hamburger-btn">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  
+  <!-- 侧边栏 -->
+  <div class="sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="today">📅 今日计划</a>
+      <a href="#" class="nav-item" data-page="cycle">🔄 周期计划</a>
+    </nav>
+  </div>
+  
+  <!-- 侧边栏遮罩 -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  
+  <div class="main-flex" id="main-flex">
+    <div class="glass-container todo-list-panel" id="todo-panel">
+      <h2>待办事项</h2>
+      <div style="text-align:center;margin-bottom:18px;">
+        <!-- 桌面端日期选择器 -->
+        <input type="text" id="date-picker-desktop" style="padding:6px 12px;border-radius:8px;border:1px solid #d0d6e0;background:rgba(255,255,255,0.7);font-size:15px;outline:none;cursor:pointer;text-align:center;">
+        <!-- 移动端原生日期选择器 -->
+        <input type="date" id="date-picker-mobile" style="display:none; cursor:pointer;text-align:center;">
+      </div>
+      <div class="input-row">
+        <input type="text" id="todo-input" placeholder="添加新的任务...">
+        <button onclick="addTodo()">添加</button>
+      </div>
+      <ul id="todo-list"></ul>
+    </div>
+    <div class="glass-container todo-detail-panel" id="detail-panel">
+      <h2 id="detail-title">任务详情</h2>
+      <div id="toolbar" style="display:flex;gap:8px;justify-content:center;margin-bottom:10px;">
+        <button type="button" onclick="formatDetail('bold')" title="加粗" style="font-weight:bold;">B</button>
+        <button type="button" onclick="formatDetail('italic')" title="倾斜" style="font-style:italic;">I</button>
+        <select id="color-picker" onchange="formatDetail('foreColor', this.value)" title="字体颜色" style="border-radius:6px;padding:2px 6px;">
+          <option value="">字体色</option>
+          <option value="#a7b8b7" style="background:#a7b8b7;">灰绿</option>
+          <option value="#b5a6a4" style="background:#b5a6a4;">灰粉</option>
+          <option value="#bfcad6" style="background:#bfcad6;">灰蓝</option>
+          <option value="#cfc1a4" style="background:#cfc1a4;">灰米</option>
+          <option value="#b7b5a7" style="background:#b7b5a7;">灰褐</option>
+        </select>
+        <select id="highlight-picker" onchange="formatDetail('hiliteColor', this.value)" title="高光" style="border-radius:6px;padding:2px 6px;">
+          <option value="white">无高光</option>
+          <option value="#fff700" style="background:#fff700;">荧光黄</option>
+          <option value="#a0ffb7" style="background:#a0ffb7;">荧光绿</option>
+          <option value="#ffb7ff" style="background:#ffb7ff;">荧光粉</option>
+        </select>
+      </div>
+      <div id="detail-content" contenteditable="true" style="width:95%;min-height:120px;max-height:400px;resize:vertical;padding:12px;border-radius:10px;border:1px solid #e0e0e0;font-size:16px;background:rgba(255,255,255,0.7);margin:0 auto 0 auto;box-sizing:border-box;outline:none;overflow:auto;"></div>
+      <div style="text-align:right;margin-top:18px;">
+        <button id="save-detail-btn" style="padding:8px 18px;border-radius:8px;background:#7b8cff;color:#fff;border:none;font-weight:bold;cursor:pointer;">保存</button>
+        <button id="close-detail-btn" style="padding:8px 18px;border-radius:8px;background:#eee;color:#888;border:none;font-weight:bold;cursor:pointer;margin-left:10px;">关闭</button>
+      </div>
+    </div>
+    
+    <!-- 周期计划页面 -->
+    <div class="glass-container cycle-plan-panel" id="cycle-panel" style="display: none;">
+      <h2>周期计划</h2>
+      <div class="input-row">
+        <input type="text" id="cycle-input" placeholder="创建新的周期计划...">
+        <button onclick="addCyclePlan()">创建</button>
+      </div>
+      <ul id="cycle-list"></ul>
+    </div>
+    
+    <!-- 周期计划详情页面 -->
+    <div class="glass-container cycle-detail-panel" id="cycle-detail-panel" style="display: none;">
+      <div class="cycle-detail-header">
+        <button class="back-btn" onclick="backToCycleList()">← 返回</button>
+        <h2 id="cycle-detail-title">周期计划详情</h2>
+        <div class="view-mode-toggle">
+          <button class="mode-btn active" data-mode="overview">总览</button>
+          <button class="mode-btn" data-mode="quadrant">四象限</button>
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <select id="priority-select" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #d0d6e0; background: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 10px;">
+          <option value="urgent-important">重要且紧急</option>
+          <option value="important-not-urgent">重要不紧急</option>
+          <option value="urgent-not-important">紧急不重要</option>
+          <option value="not-urgent-not-important">不紧急不重要</option>
+        </select>
+        <div class="input-row">
+          <input type="text" id="plan-input" placeholder="添加新的计划项...">
+          <button onclick="addPlanItem()">添加</button>
+        </div>
+      </div>
+      
+      <!-- 总览模式 -->
+      <div id="overview-view" class="view-content">
+        <ul id="plan-list"></ul>
+      </div>
+      
+      <!-- 四象限模式 -->
+      <div id="quadrant-view" class="view-content" style="display: none;">
+        <div class="quadrant-grid">
+          <div class="quadrant urgent-important">
+            <h3>重要且紧急</h3>
+            <ul class="quadrant-list" data-priority="urgent-important"></ul>
+          </div>
+          <div class="quadrant important-not-urgent">
+            <h3>重要不紧急</h3>
+            <ul class="quadrant-list" data-priority="important-not-urgent"></ul>
+          </div>
+          <div class="quadrant urgent-not-important">
+            <h3>紧急不重要</h3>
+            <ul class="quadrant-list" data-priority="urgent-not-important"></ul>
+          </div>
+          <div class="quadrant not-urgent-not-important">
+            <h3>不紧急不重要</h3>
+            <ul class="quadrant-list" data-priority="not-urgent-not-important"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const input = document.getElementById('todo-input');
+    const list = document.getElementById('todo-list');
+    const datePickerDesktop = document.getElementById('date-picker-desktop');
+    const datePickerMobile = document.getElementById('date-picker-mobile');
+    const detailPanel = document.getElementById('detail-panel');
+    const detailTitle = document.getElementById('detail-title');
+    const detailContent = document.getElementById('detail-content');
+    const saveDetailBtn = document.getElementById('save-detail-btn');
+    const closeDetailBtn = document.getElementById('close-detail-btn');
+    let currentDetailIdx = null;
+    
+    // 获取今天日期字符串 yyyy-mm-dd
+    function getTodayStr() {
+      const d = new Date();
+      return d.toISOString().slice(0,10);
+    }
+    // 当前选中的日期
+    let currentDate = getTodayStr();
+    
+    // 检测是否为移动端
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // 移动端：显示原生日期选择器，隐藏 flatpickr 容器
+      datePickerDesktop.style.display = 'none';
+      datePickerMobile.style.display = 'block';
+      
+      datePickerMobile.value = currentDate;
+      datePickerMobile.addEventListener('change', function() {
+        currentDate = this.value || getTodayStr();
+        detailPanel.classList.remove('active');
+        document.getElementById('todo-panel').classList.remove('shrink');
+        document.getElementById('main-flex').classList.remove('detail-active');
+        currentDetailIdx = null;
+      });
+    } else {
+      // 桌面端：初始化 flatpickr
+      flatpickr(datePickerDesktop, {
+        dateFormat: "Y-m-d",
+        defaultDate: currentDate,
+        locale: "zh",
+        disableMobile: false, // 禁用移动端原生模式，确保 flatpickr 样式生效
+        clickOpens: true, // 点击输入框打开日历
+        allowInput: false, // 禁止手动输入
+        position: "auto",
+        static: false,
+        appendTo: document.body,
+        onChange: function(selectedDates, dateStr) {
+          currentDate = dateStr;
+          detailPanel.classList.remove('active');
+          document.getElementById('todo-panel').classList.remove('shrink');
+          document.getElementById('main-flex').classList.remove('detail-active');
+          currentDetailIdx = null;
+        }
+      });
+    }
+
+    // ========== 任务详情功能 ==========
+    let currentCyclePlan = null;
+    let currentViewMode = 'overview';
+    
+    // 获取所有周期计划
+    function loadCyclePlans() {
+      return JSON.parse(localStorage.getItem('cycle-plans') || '{}');
+    }
+    
+    // 保存所有周期计划
+    function saveCyclePlans(plans) {
+      localStorage.setItem('cycle-plans', JSON.stringify(plans));
+    }
+    
+    // 渲染周期计划列表
+    function renderCyclePlans() {
+      const plans = loadCyclePlans();
+      const cycleList = document.getElementById('cycle-list');
+      cycleList.innerHTML = '';
+      
+      Object.keys(plans).forEach(planName => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span class="todo-text">${planName}</span>
+          <span class="actions">
+            <button onclick="openCyclePlan('${planName}')">📋</button>
+            <button onclick="deleteCyclePlan('${planName}')">🗑️</button>
+          </span>
+        `;
+        cycleList.appendChild(li);
+      });
+    }
+    
+    // 添加周期计划
+    function addCyclePlan() {
+      const input = document.getElementById('cycle-input');
+      const planName = input.value.trim();
+      if (planName) {
+        const plans = loadCyclePlans();
+        plans[planName] = [];
+        saveCyclePlans(plans);
+        input.value = '';
+        renderCyclePlans();
+      }
+    }
+    
+    // 删除周期计划
+    function deleteCyclePlan(planName) {
+      if (confirm(`确定要删除周期计划"${planName}"吗？`)) {
+        const plans = loadCyclePlans();
+        delete plans[planName];
+        saveCyclePlans(plans);
+        renderCyclePlans();
+      }
+    }
+    
+    // 打开周期计划详情
+    function openCyclePlan(planName) {
+      currentCyclePlan = planName;
+      document.getElementById('cycle-detail-title').textContent = planName;
+      document.getElementById('cycle-panel').style.display = 'none';
+      document.getElementById('cycle-detail-panel').style.display = 'block';
+      renderPlanItems();
+    }
+    
+    // 返回周期计划列表
+    function backToCycleList() {
+      document.getElementById('cycle-detail-panel').style.display = 'none';
+      document.getElementById('cycle-panel').style.display = 'block';
+      currentCyclePlan = null;
+    }
+    
+    // 添加计划项
+    function addPlanItem() {
+      const input = document.getElementById('plan-input');
+      const prioritySelect = document.getElementById('priority-select');
+      const text = input.value.trim();
+      const priority = prioritySelect.value;
+      
+      if (text && currentCyclePlan) {
+        const plans = loadCyclePlans();
+        // 生成唯一ID
+        const id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        plans[currentCyclePlan].push({
+          id: id,
+          text: text,
+          priority: priority,
+          completed: false,
+          detail: ''
+        });
+        saveCyclePlans(plans);
+        input.value = '';
+        renderPlanItems();
+      }
+    }
+    
+    // 渲染计划项
+    function renderPlanItems() {
+      if (!currentCyclePlan) return;
+      
+      const plans = loadCyclePlans();
+      const items = plans[currentCyclePlan] || [];
+      
+      if (currentViewMode === 'overview') {
+        renderOverviewMode(items);
+      } else {
+        renderQuadrantMode(items);
+      }
+    }
+    
+    // 渲染总览模式
+    function renderOverviewMode(items) {
+      const planList = document.getElementById('plan-list');
+      planList.innerHTML = '';
+      
+      items.forEach((item, idx) => {
+        const li = document.createElement('li');
+        li.className = item.completed ? 'completed' : '';
+        // 使用id作为标识符，如果没有id则使用索引作为后备
+        const itemId = item.id || idx;
+        li.innerHTML = `
+          <span class="check-circle" onclick="togglePlanItem('${itemId}')">
+            ${item.completed ? '<span class="checkmark">&#10003;</span>' : ''}
+          </span>
+          <span class="todo-text">${item.text}</span>
+          <span class="priority-badge ${item.priority}">${getPriorityText(item.priority)}</span>
+          <span class="actions">
+            <button onclick="deletePlanItem('${itemId}')">🗑️</button>
+          </span>
+        `;
+        planList.appendChild(li);
+      });
+    }
+    
+    // 渲染四象限模式
+    function renderQuadrantMode(items) {
+      const quadrantLists = document.querySelectorAll('.quadrant-list');
+      quadrantLists.forEach(list => list.innerHTML = '');
+      
+      items.forEach((item, idx) => {
+        const targetList = document.querySelector(`[data-priority="${item.priority}"]`);
+        if (targetList) {
+          const li = document.createElement('li');
+          li.className = item.completed ? 'completed' : '';
+          // 使用id作为标识符，如果没有id则使用索引作为后备
+          const itemId = item.id || idx;
+          li.innerHTML = `
+            <span class="check-circle" onclick="togglePlanItem('${itemId}')">
+              ${item.completed ? '<span class="checkmark">&#10003;</span>' : ''}
+            </span>
+            <span class="todo-text">${item.text}</span>
+            <span class="actions">
+              <button onclick="deletePlanItem('${itemId}')">🗑️</button>
+            </span>
+          `;
+          targetList.appendChild(li);
+        }
+      });
+    }
+    
+    // 切换计划项完成状态
+    function togglePlanItem(itemId) {
+      if (!currentCyclePlan) return;
+      
+      const plans = loadCyclePlans();
+      const items = plans[currentCyclePlan];
+      
+      // 根据id查找项目，如果没找到则按索引查找（兼容旧数据）
+      let targetIndex = items.findIndex(item => item.id === itemId);
+      if (targetIndex === -1) {
+        targetIndex = parseInt(itemId);
+      }
+      
+      if (targetIndex >= 0 && targetIndex < items.length) {
+        items[targetIndex].completed = !items[targetIndex].completed;
+        saveCyclePlans(plans);
+        renderPlanItems();
+      }
+    }
+    
+    // 删除计划项
+    function deletePlanItem(itemId) {
+      if (!currentCyclePlan) return;
+      
+      const plans = loadCyclePlans();
+      const items = plans[currentCyclePlan];
+      
+      // 根据id查找项目，如果没找到则按索引查找（兼容旧数据）
+      let targetIndex = items.findIndex(item => item.id === itemId);
+      if (targetIndex === -1) {
+        targetIndex = parseInt(itemId);
+      }
+      
+      if (targetIndex >= 0 && targetIndex < items.length) {
+        items.splice(targetIndex, 1);
+        saveCyclePlans(plans);
+        renderPlanItems();
+      }
+    }
+    
+    // 获取优先级文本
+    function getPriorityText(priority) {
+      const texts = {
+        'urgent-important': '重要紧急',
+        'important-not-urgent': '重要不紧急',
+        'urgent-not-important': '紧急不重要',
+        'not-urgent-not-important': '不紧急不重要'
+      };
+      return texts[priority] || '';
+    }
+    
+    // 视图模式切换
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const mode = this.dataset.mode;
+        currentViewMode = mode;
+        
+        // 更新按钮状态
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // 切换视图
+        if (mode === 'overview') {
+          document.getElementById('overview-view').style.display = 'block';
+          document.getElementById('quadrant-view').style.display = 'none';
+        } else {
+          document.getElementById('overview-view').style.display = 'none';
+          document.getElementById('quadrant-view').style.display = 'block';
+        }
+        
+        renderPlanItems();
+      });
+    });
+    
+    // 周期计划输入框回车事件
+    document.getElementById('cycle-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addCyclePlan();
+    });
+    
+    // 计划项输入框回车事件
+    document.getElementById('plan-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addPlanItem();
+    });
+
+    // 汉堡菜单事件
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    function toggleSidebar(e) {
+      e.preventDefault(); // 防止触发 click 事件或页面滚动
+      sidebar.classList.toggle('open');
+      hamburgerBtn.classList.toggle('active');
+      sidebarOverlay.classList.toggle('show');
+    }
+
+    function closeSidebar(e) {
+      e.preventDefault();
+      sidebar.classList.remove('open');
+      hamburgerBtn.classList.remove('active');
+      sidebarOverlay.classList.remove('show');
+    }
+
+    hamburgerBtn.addEventListener('touchstart', toggleSidebar, { passive: false });
+    hamburgerBtn.addEventListener('click', toggleSidebar);
+
+    sidebarOverlay.addEventListener('touchstart', closeSidebar, { passive: false });
+    sidebarOverlay.addEventListener('click', closeSidebar);
+
+    // 侧边栏导航项点击事件
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const page = this.dataset.page;
+        
+        // 更新导航项状态
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        this.classList.add('active');
+        
+        // 切换页面
+        if (page === 'today') {
+          document.getElementById('todo-panel').style.display = 'block';
+          document.getElementById('cycle-panel').style.display = 'none';
+          document.getElementById('cycle-detail-panel').style.display = 'none';
+          document.getElementById('detail-panel').classList.remove('active');
+          document.getElementById('todo-panel').classList.remove('shrink');
+          document.getElementById('main-flex').classList.remove('detail-active');
+        } else if (page === 'cycle') {
+          document.getElementById('todo-panel').style.display = 'none';
+          document.getElementById('cycle-panel').style.display = 'block';
+          document.getElementById('cycle-detail-panel').style.display = 'none';
+          document.getElementById('detail-panel').classList.remove('active');
+          renderCyclePlans();
+        }
+        
+        // 关闭侧边栏
+        closeSidebar(e);
+      });
+    });
+
+    // 初始化页面
+    renderCyclePlans();
+  </script>
+</body>
+</html>
