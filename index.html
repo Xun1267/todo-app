@@ -15,6 +15,7 @@ body {
   display: block;
   font-family: 'Roboto', sans-serif;
   margin: 0;
+  padding-top: 60px;
   overflow-x: hidden;
 }
 #main-flex {
@@ -773,6 +774,22 @@ li {
          .view-mode-toggle {
            justify-content: center;
          }
+         
+         /* 移动端用户名编辑优化 */
+         #user-name {
+           min-height: 24px;
+           min-width: 60px;
+           padding: 4px 8px !important;
+           border-radius: 4px;
+           -webkit-tap-highlight-color: rgba(0, 123, 255, 0.2);
+           touch-action: manipulation;
+         }
+         
+         #user-name:focus {
+           background-color: rgba(255, 255, 255, 0.9);
+           border-bottom: 2px solid #007bff !important;
+           box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+         }
        }
   </style>
 </head>
@@ -782,6 +799,13 @@ li {
     <span></span>
     <span></span>
     <span></span>
+  </div>
+  
+  <!-- 顶部欢迎语 -->
+  <div class="welcome-banner" style="position: fixed; top: 0; left: 0; right: 0; padding: 12px 20px; text-align: center; z-index: 999;">
+    <span style="color: #555; font-size: 16px; font-weight: 500; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);">你好，</span>
+    <span id="user-name" contenteditable="true" style="color: #007bff; font-weight: bold; cursor: text; border-bottom: 1px dashed #007bff; padding: 2px 4px; outline: none; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);" onclick="this.focus()">打工人</span>
+    <span style="color: #555; font-size: 16px; font-weight: 500; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);">。你的待办清单已更新。</span>
   </div>
   
   <!-- 侧边栏 -->
@@ -1257,8 +1281,69 @@ li {
       });
     });
 
+    // 用户名保存和加载功能
+    function loadUserName() {
+      const savedName = localStorage.getItem('user-name');
+      if (savedName) {
+        document.getElementById('user-name').textContent = savedName;
+      }
+    }
+    
+    function saveUserName() {
+      const userName = document.getElementById('user-name').textContent.trim();
+      if (userName) {
+        localStorage.setItem('user-name', userName);
+      }
+    }
+    
+    // 用户名编辑事件
+    const userNameElement = document.getElementById('user-name');
+    
+    // 桌面端事件
+    userNameElement.addEventListener('blur', saveUserName);
+    userNameElement.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.blur();
+      }
+    });
+    
+    // 移动端触摸事件支持
+    userNameElement.addEventListener('touchstart', function(e) {
+      // 防止触摸时的默认行为
+      e.stopPropagation();
+    }, { passive: false });
+    
+    userNameElement.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      // 确保元素获得焦点
+      this.focus();
+      // 选中所有文本以便编辑
+      if (window.getSelection && document.createRange) {
+        const range = document.createRange();
+        range.selectNodeContents(this);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }, { passive: false });
+    
+    // 移动端输入完成检测
+    userNameElement.addEventListener('input', function() {
+      // 移动端可能没有明确的blur事件，所以在输入时也保存
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = setTimeout(saveUserName, 1000);
+    });
+    
     // 初始化页面
+    loadUserName();
     renderCyclePlans();
   </script>
+  
+  <!-- 页面底部引用 -->
+  <footer style="text-align: center; padding: 20px; color: #999; font-size: 14px; margin-top: 40px; border-top: 1px solid #eee;">
+    "做不完的，根本做不完。" —— 鲁迅（并没有说过）
+  </footer>
 </body>
 </html>
