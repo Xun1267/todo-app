@@ -103,6 +103,9 @@ ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 li {
   background: rgba(255,255,255,0.5);
@@ -720,6 +723,9 @@ li {
        list-style: none;
        padding: 0;
        margin: 0;
+       max-height: 150px;
+       overflow-y: auto;
+       overflow-x: hidden;
      }
      
      .quadrant-list li {
@@ -750,6 +756,26 @@ li {
        margin-left: 6px;
      }
      
+     /* 自定义滚动条样式 */
+     ul::-webkit-scrollbar, .quadrant-list::-webkit-scrollbar {
+       width: 6px;
+     }
+     
+     ul::-webkit-scrollbar-track, .quadrant-list::-webkit-scrollbar-track {
+       background: rgba(255, 255, 255, 0.1);
+       border-radius: 3px;
+     }
+     
+     ul::-webkit-scrollbar-thumb, .quadrant-list::-webkit-scrollbar-thumb {
+       background: rgba(123, 140, 255, 0.3);
+       border-radius: 3px;
+       transition: background 0.2s;
+     }
+     
+     ul::-webkit-scrollbar-thumb:hover, .quadrant-list::-webkit-scrollbar-thumb:hover {
+       background: rgba(123, 140, 255, 0.5);
+     }
+     
      /* 响应式设计 */
        @media (max-width: 800px) {
             .todo-list-panel, .todo-detail-panel, .cycle-plan-panel, .cycle-detail-panel {
@@ -759,6 +785,12 @@ li {
               max-height: 85vh;
               left: 50%;
               transform: translate(-50%, -50%);
+              overflow-y: auto;
+              overflow-x: hidden;
+            }
+            
+            ul#todo-list, ul#cycle-list {
+              max-height: calc(85vh - 200px);
               overflow-y: auto;
               overflow-x: hidden;
             }
