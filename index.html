@@ -15,7 +15,7 @@ body {
   display: block;
   font-family: 'Roboto', sans-serif;
   margin: 0;
-  padding-top: 60px;
+  padding-top: 0;
   overflow-x: hidden;
 }
 #main-flex {
@@ -187,7 +187,7 @@ li.completed {
 }
 @media (max-width: 1200px) {
   .main-flex.detail-active {
-    left: calc(50vw - 50% - 185px); /* 居中适配小屏 */
+    /* 移除left偏移，保持居中 */
   }
 }
 @media (max-width: 800px) {
@@ -756,14 +756,40 @@ li {
               min-width: 75vw;
               max-width: 75vw;
               width: 75vw;
+              max-height: 85vh;
               left: 50%;
               transform: translate(-50%, -50%);
+              overflow-y: auto;
+              overflow-x: hidden;
+            }
+            
+            .glass-container {
+              overflow: hidden;
+              max-height: 85vh;
+              display: flex;
+              flex-direction: column;
+            }
+            
+            .glass-container > * {
+              flex-shrink: 0;
+            }
+            
+            .glass-container .quadrant-grid {
+              flex: 1;
+              overflow-y: auto;
             }
          
          .quadrant-grid {
            grid-template-columns: 1fr;
-           grid-template-rows: repeat(4, 1fr);
+           grid-template-rows: repeat(4, auto);
            height: auto;
+           max-height: calc(85vh - 120px);
+           overflow-y: auto;
+         }
+         
+         .quadrant {
+           min-height: 150px;
+           max-height: 200px;
          }
          
          .cycle-detail-header {
@@ -774,6 +800,39 @@ li {
          .view-mode-toggle {
            justify-content: center;
          }
+         
+         /* 移动端内容区域调整 */
+         .todo-list-panel, .cycle-plan-panel, .cycle-detail-panel {
+           padding-bottom: 60px !important;
+         }
+         
+         /* 移动端滚动条样式 */
+         .todo-list-panel::-webkit-scrollbar,
+         .cycle-plan-panel::-webkit-scrollbar,
+         .cycle-detail-panel::-webkit-scrollbar {
+           width: 6px;
+         }
+         
+         .todo-list-panel::-webkit-scrollbar-track,
+         .cycle-plan-panel::-webkit-scrollbar-track,
+         .cycle-detail-panel::-webkit-scrollbar-track {
+           background: rgba(255, 255, 255, 0.1);
+           border-radius: 3px;
+         }
+         
+         .todo-list-panel::-webkit-scrollbar-thumb,
+         .cycle-plan-panel::-webkit-scrollbar-thumb,
+         .cycle-detail-panel::-webkit-scrollbar-thumb {
+           background: rgba(255, 255, 255, 0.3);
+           border-radius: 3px;
+         }
+         
+         /* 移动端侧栏样式调整 */
+         .sidebar {
+           padding-bottom: 80px !important;
+         }
+         
+
          
          /* 移动端用户名编辑优化 */
          #user-name {
@@ -790,6 +849,12 @@ li {
            border-bottom: 2px solid #007bff !important;
            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
          }
+         
+
+         
+         #user-name {
+           font-size: 16px !important;
+         }
        }
   </style>
 </head>
@@ -801,25 +866,28 @@ li {
     <span></span>
   </div>
   
-  <!-- 顶部欢迎语 -->
-  <div class="welcome-banner" style="position: fixed; top: 0; left: 0; right: 0; padding: 12px 20px; text-align: center; z-index: 999;">
-    <span style="color: #555; font-size: 16px; font-weight: 500; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);">你好，</span>
-    <span id="user-name" contenteditable="true" style="color: #007bff; font-weight: bold; cursor: text; border-bottom: 1px dashed #007bff; padding: 2px 4px; outline: none; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);" onclick="this.focus()">打工人</span>
-    <span style="color: #555; font-size: 16px; font-weight: 500; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);">。你的待办清单已更新。</span>
-  </div>
-  
   <!-- 侧边栏 -->
   <div class="sidebar" id="sidebar">
     <nav class="sidebar-nav">
       <a href="#" class="nav-item active" data-page="today">📅 今日计划</a>
       <a href="#" class="nav-item" data-page="cycle">🔄 周期计划</a>
     </nav>
+    <!-- 侧栏底部引用 -->
+    <div style="position: absolute; bottom: 20px; left: 20px; right: 20px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #eee; padding-top: 15px; margin-top: 30px;">
+      "做不完的，根本做不完。" —— 鲁迅（并没有说过）
+    </div>
   </div>
   
   <!-- 侧边栏遮罩 -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
   
   <div class="main-flex" id="main-flex">
+    <!-- 用户名显示区域 -->
+    <div style="position: absolute; top: 20px; right: 20px; z-index: 100;">
+      <span style="color: #666; font-size: 16px; margin-right: 0;">欢迎，</span>
+      <span id="user-name" contenteditable="true" style="color: #007bff; font-weight: bold; font-size: 16px; cursor: text; min-width: 60px; text-decoration: underline;">用户</span>
+    </div>
+    
     <div class="glass-container todo-list-panel" id="todo-panel">
       <h2>待办事项</h2>
       <div style="text-align:center;margin-bottom:18px;">
@@ -874,7 +942,6 @@ li {
     <!-- 周期计划详情页面 -->
     <div class="glass-container cycle-detail-panel" id="cycle-detail-panel" style="display: none;">
       <div class="cycle-detail-header">
-        <button class="back-btn" onclick="backToCycleList()">← 返回</button>
         <h2 id="cycle-detail-title">周期计划详情</h2>
         <div class="view-mode-toggle">
           <button class="mode-btn active" data-mode="overview">总览</button>
@@ -921,9 +988,27 @@ li {
           </div>
         </div>
       </div>
+      
+      <!-- 底部返回按钮 -->
+      <div style="margin-top: 20px; text-align: center;">
+        <button class="back-btn" onclick="backToCycleList()">← 返回</button>
+      </div>
     </div>
   </div>
   <script>
+    // 检测是否为移动端
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // 全局测试函数
+    window.testFunction = function() {
+      console.log('Test function called successfully!');
+      alert('JavaScript is working!');
+      return true;
+    };
+    
+    console.log('Script loaded, isMobile:', isMobile);
+    console.log('Test function available:', typeof window.testFunction);
+    
     const input = document.getElementById('todo-input');
     const list = document.getElementById('todo-list');
     const datePickerDesktop = document.getElementById('date-picker-desktop');
@@ -942,9 +1027,6 @@ li {
     }
     // 当前选中的日期
     let currentDate = getTodayStr();
-    
-    // 检测是否为移动端
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (isMobile) {
       // 移动端：显示原生日期选择器，隐藏 flatpickr 容器
@@ -981,6 +1063,99 @@ li {
       });
     }
 
+    // ========== 待办事项管理功能 ==========
+    function loadAllTodos() {
+      const raw = JSON.parse(localStorage.getItem('todos-by-date') || '{}');
+      for(const date in raw) {
+        raw[date] = (raw[date]||[]).map(item => {
+          if(typeof item === 'string') return {text:item,completed:false,detail:''};
+          if(!('detail' in item)) item.detail = '';
+          return item;
+        });
+      }
+      return raw;
+    }
+    
+    function saveAllTodos(data) {
+      localStorage.setItem('todos-by-date', JSON.stringify(data));
+    }
+    
+    function getTodosForDate(date) {
+      const all = loadAllTodos();
+      return all[date] || [];
+    }
+    
+    function saveTodosForDate(date, todos) {
+      const all = loadAllTodos();
+      all[date] = todos;
+      saveAllTodos(all);
+    }
+
+    function renderTodos() {
+      const todos = getTodosForDate(currentDate);
+      list.innerHTML = '';
+      todos.forEach((todo, idx) => {
+        const li = document.createElement('li');
+        li.className = todo.completed ? 'completed' : '';
+        li.innerHTML = `
+          <span class="check-circle" onclick="toggleTodo(${idx})">
+            ${todo.completed ? '<span class="checkmark">✓</span>' : ''}
+          </span>
+          <span class="todo-text">${todo.text}</span>
+          <span class="actions">
+            <button onclick="openDetail(${idx})">📋</button>
+            <button onclick="deleteTodo(${idx})">🗑️</button>
+          </span>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function addTodo() {
+      const value = input.value.trim();
+      if (value) {
+        const todos = getTodosForDate(currentDate);
+        todos.push({ text: value, completed: false, detail: '' });
+        saveTodosForDate(currentDate, todos);
+        input.value = '';
+        renderTodos();
+      }
+    }
+
+    function toggleTodo(idx) {
+      const todos = getTodosForDate(currentDate);
+      todos[idx].completed = !todos[idx].completed;
+      saveTodosForDate(currentDate, todos);
+      renderTodos();
+    }
+
+    function deleteTodo(idx) {
+      const todos = getTodosForDate(currentDate);
+      todos.splice(idx, 1);
+      saveTodosForDate(currentDate, todos);
+      renderTodos();
+    }
+
+    function editTodo(idx) {
+      const todos = getTodosForDate(currentDate);
+      const newText = prompt('修改任务内容：', todos[idx].text);
+      if (newText !== null && newText.trim() !== '') {
+        todos[idx].text = newText.trim();
+        saveTodosForDate(currentDate, todos);
+        renderTodos();
+      }
+    }
+
+    function openDetail(idx) {
+      const todos = getTodosForDate(currentDate);
+      currentDetailIdx = idx;
+      detailTitle.textContent = todos[idx].text;
+      detailContent.innerHTML = todos[idx].detail || '';
+      detailPanel.classList.add('active');
+      document.getElementById('todo-panel').classList.add('shrink');
+      document.getElementById('main-flex').classList.add('detail-active');
+    }
+
     // ========== 任务详情功能 ==========
     let currentCyclePlan = null;
     let currentViewMode = 'overview';
@@ -1007,7 +1182,7 @@ li {
           <span class="todo-text">${planName}</span>
           <span class="actions">
             <button onclick="openCyclePlan('${planName}')">📋</button>
-            <button onclick="deleteCyclePlan('${planName}')">🗑️</button>
+            <button class="delete-cycle-btn" data-plan-name="${planName}">🗑️</button>
           </span>
         `;
         cycleList.appendChild(li);
@@ -1027,14 +1202,12 @@ li {
       }
     }
     
-    // 删除周期计划
+    // 删除周期计划（取消确认，直接删除）
     function deleteCyclePlan(planName) {
-      if (confirm(`确定要删除周期计划"${planName}"吗？`)) {
-        const plans = loadCyclePlans();
-        delete plans[planName];
-        saveCyclePlans(plans);
-        renderCyclePlans();
-      }
+      const plans = loadCyclePlans();
+      delete plans[planName];
+      saveCyclePlans(plans);
+      renderCyclePlans();
     }
     
     // 打开周期计划详情
@@ -1108,9 +1281,18 @@ li {
           <span class="todo-text">${item.text}</span>
           <span class="priority-badge ${item.priority}">${getPriorityText(item.priority)}</span>
           <span class="actions">
-            <button onclick="deletePlanItem('${itemId}')">🗑️</button>
+            <button class="delete-item-btn" data-item-id="${itemId}" ontouchstart="this.style.backgroundColor='#ff6b6b'" ontouchend="this.style.backgroundColor=''">🗑️</button>
           </span>
         `;
+        
+        // 新的、简化的代码
+        const deleteBtn = li.querySelector('.delete-item-btn');
+        deleteBtn.addEventListener('click', function(e) {
+          // 只需要阻止事件冒泡，防止触发其他上层元素的事件
+          e.stopPropagation();
+          deletePlanItem(itemId);
+        });
+        
         planList.appendChild(li);
       });
     }
@@ -1133,9 +1315,18 @@ li {
             </span>
             <span class="todo-text">${item.text}</span>
             <span class="actions">
-              <button onclick="deletePlanItem('${itemId}')">🗑️</button>
+              <button class="delete-item-btn" data-item-id="${itemId}" ontouchstart="this.style.backgroundColor='#ff6b6b'" ontouchend="this.style.backgroundColor=''">🗑️</button>
             </span>
           `;
+          
+          // 新的、简化的代码
+          const deleteBtn = li.querySelector('.delete-item-btn');
+          deleteBtn.addEventListener('click', function(e) {
+            // 只需要阻止事件冒泡
+            e.stopPropagation();
+            deletePlanItem(itemId);
+          });
+          
           targetList.appendChild(li);
         }
       });
@@ -1161,19 +1352,18 @@ li {
       }
     }
     
-    // 删除计划项
+    // 删除计划项（取消确认，直接删除）
     function deletePlanItem(itemId) {
       if (!currentCyclePlan) return;
-      
       const plans = loadCyclePlans();
       const items = plans[currentCyclePlan];
-      
+
       // 根据id查找项目，如果没找到则按索引查找（兼容旧数据）
       let targetIndex = items.findIndex(item => item.id === itemId);
       if (targetIndex === -1) {
         targetIndex = parseInt(itemId);
       }
-      
+
       if (targetIndex >= 0 && targetIndex < items.length) {
         items.splice(targetIndex, 1);
         saveCyclePlans(plans);
@@ -1336,14 +1526,43 @@ li {
       this.saveTimeout = setTimeout(saveUserName, 1000);
     });
     
+    // ========== 详情面板功能 ==========
+    saveDetailBtn.onclick = function() {
+      if(currentDetailIdx === null) return;
+      const todos = getTodosForDate(currentDate);
+      todos[currentDetailIdx].detail = detailContent.innerHTML;
+      saveTodosForDate(currentDate, todos);
+      alert('已保存！');
+    };
+    
+    closeDetailBtn.onclick = function() {
+      detailPanel.classList.remove('active');
+      document.getElementById('todo-panel').classList.remove('shrink');
+      document.getElementById('main-flex').classList.remove('detail-active');
+      currentDetailIdx = null;
+    };
+
+    // ========== 键盘事件监听 ==========
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addTodo();
+    });
+
+    // 为"周期计划"列表添加事件委托
+    document.getElementById('cycle-list').addEventListener('click', function(e) {
+      if (e.target && e.target.closest('.delete-cycle-btn')) {
+        const planName = e.target.closest('.delete-cycle-btn').dataset.planName;
+        if (planName) {
+          deleteCyclePlan(planName);
+        }
+      }
+    });
+
     // 初始化页面
     loadUserName();
     renderCyclePlans();
+    renderTodos();
   </script>
   
-  <!-- 页面底部引用 -->
-  <footer style="text-align: center; padding: 20px; color: #999; font-size: 14px; margin-top: 40px; border-top: 1px solid #eee;">
-    "做不完的，根本做不完。" —— 鲁迅（并没有说过）
-  </footer>
+
 </body>
 </html>
