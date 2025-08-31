@@ -1072,6 +1072,7 @@ li {
         document.getElementById('todo-panel').classList.remove('shrink');
         document.getElementById('main-flex').classList.remove('detail-active');
         currentDetailIdx = null;
+        renderTodos(); // 重新渲染待办事项列表
       });
     } else {
       // 桌面端：初始化 flatpickr
